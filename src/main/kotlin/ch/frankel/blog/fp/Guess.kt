@@ -21,10 +21,15 @@ fun main(args: Array<String>) {
                 else println("You guessed wrong, $name! The number was $number")
             }
         }
-        println("Do you want to continue, $name?")
-        when(readLine()) {
-            "y" -> exec = true
-            "n" -> exec = false
+        var cont = true
+        while(cont) {
+            cont = false
+            println("Do you want to continue, $name?")
+            when (readLine()?.toLowerCase()) {
+                "y"  -> exec = true
+                "n"  -> exec = false
+                else -> cont = true
+            }
         }
     }
 }
