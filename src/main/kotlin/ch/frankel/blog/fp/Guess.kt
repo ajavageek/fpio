@@ -16,17 +16,15 @@ fun main(args: Array<String>) {
     gameLoop(name).unsafeRunSync()
 }
 
-private fun nextInt(upper: Int): IO<Int> = IO { random.nextInt(upper) }
-
 private fun gameLoop(name: String?): IO<Unit> = IO.monad().binding {
-    val number = nextInt(5).map { it + 1 }.bind()
-    putStrLn("Dear $name, please guess a number from 1 to 5:").bind()
-    val input = getStrLn().bind()
+    val number = random.nextInt(5) + 1
+    println("Dear $name, please guess a number from 1 to 5:")
+    val input = readLine()
     parseInt(input).fold(
-            { putStrLn("You did not enter a number!").bind() },
+            { println("You did not enter a number!") },
             {
-                if (it == number) putStrLn("You guessed right, $name!").bind()
-                else putStrLn("You guessed wrong, $name! The number was $number").bind()
+                if (it == number) println("You guessed right, $name!")
+                else println("You guessed wrong, $name! The number was $number")
             }
     )
     val cont = checkContinue(name).bind()
@@ -37,8 +35,8 @@ private fun gameLoop(name: String?): IO<Unit> = IO.monad().binding {
 
 
 private fun checkContinue(name: String?): IO<Boolean> = IO.monad().binding {
-    putStrLn("Do you want to continue, $name?").bind()
-    val input = getStrLn().map { it?.toLowerCase() }.bind()
+    println("Do you want to continue, $name?")
+    val input = readLine()?.trueMap { it.toLowerCase() }
     when (input) {
         "y" -> true
         "n" -> false
@@ -47,7 +45,6 @@ private fun checkContinue(name: String?): IO<Boolean> = IO.monad().binding {
 }
 .fix()
 
-private fun putStrLn(line: String): IO<Unit> = IO { println(line) }
-private fun getStrLn(): IO<String?> = IO { readLine() }
+private fun String.trueMap(f: (String) -> String) = f(this)
 
-private fun parseInt(input: String?) = Try {input?.toInt() }
+private fun parseInt(input: String?) = Try { input?.toInt() }
