@@ -1,6 +1,7 @@
 package ch.frankel.blog.fp
 
 import arrow.core.*
+import arrow.effects.IO
 import java.security.SecureRandom
 
 private val random = SecureRandom()
@@ -33,5 +34,8 @@ fun main(args: Array<String>) {
         }
     }
 }
+
+private fun putStrLn(line: String): IO<Unit> = IO { println(line) }
+private fun getStrLn(): IO<String?> = IO { readLine() }
 
 private fun parseInt(input: String?) = Try {input?.toInt() }
