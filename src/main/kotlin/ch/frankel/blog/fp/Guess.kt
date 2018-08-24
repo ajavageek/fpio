@@ -3,6 +3,7 @@ package ch.frankel.blog.fp
 import arrow.core.Try
 import arrow.effects.IO
 import arrow.effects.fix
+import arrow.effects.liftIO
 import arrow.effects.monad
 import arrow.typeclasses.binding
 import java.security.SecureRandom
@@ -17,34 +18,34 @@ fun main(args: Array<String>) {
 }
 
 private fun gameLoop(name: String?): IO<Unit> = IO.monad().binding {
-    val number = random.nextInt(5) + 1
     println("Dear $name, please guess a number from 1 to 5:")
-    val input = readLine()
-    parseInt(input).fold(
+    (readLine() as String).safeToInt().fold(
             { println("You did not enter a number!") },
             {
+                val number = random.nextInt(5) + 1
                 if (it == number) println("You guessed right, $name!")
                 else println("You guessed wrong, $name! The number was $number")
             }
     )
-    val cont = checkContinue(name).bind()
-    if (cont) gameLoop(name).bind()
-    else Unit
-}
-.fix()
+    checkContinue(name).map {
+        (if (it) gameLoop(name)
+        else Unit.liftIO())
+    }.flatten()
+     .bind()
+}.fix()
 
 
 private fun checkContinue(name: String?): IO<Boolean> = IO.monad().binding {
     println("Do you want to continue, $name?")
-    val input = readLine()?.trueMap { it.toLowerCase() }
-    when (input) {
-        "y" -> true
-        "n" -> false
-        else -> checkContinue(name).bind()
-    }
-}
-.fix()
+    (readLine() as String).trueMap { it.toLowerCase() }.trueMap {
+        when (it) {
+            "y" -> true.liftIO()
+            "n" -> false.liftIO()
+            else -> checkContinue(name)
+        }
+    }.bind()
+}.fix()
 
-private fun String.trueMap(f: (String) -> String) = f(this)
+private fun <T> String.trueMap(f: (String) -> T) = f(this)
 
-private fun parseInt(input: String?) = Try { input?.toInt() }
+private fun String.safeToInt() = Try { this.toInt() }
